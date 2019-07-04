@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% load static %}
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="{% static 'scripts/jquery/jquery-1.7.1.js' %}"></script>
+<link href="{% static 'style/authority/basic_layout.css' %}" rel="stylesheet" type="text/css">
+<link href="{% static 'style/authority/common_style.css' %}" rel="stylesheet" type="text/css">
+<script type="text/javascript" src="{% static 'scripts/authority/commonAll.js' %}"></script>
+<script type="text/javascript" src="{% static 'scripts/fancybox/jquery.fancybox-1.3.4.js' %}"></script>
+<script type="text/javascript" src="{% static 'scripts/fancybox/jquery.fancybox-1.3.4.pack.js' %}"></script>
+<title>百智招聘</title>
+<script type="text/javascript">
+</script>
+<style>
+</style>
+</head>
+<body>
+	<form id="submitForm" name="submitForm" action="{% url 'baiapp:menu' %}" method="get">
+		<input type="hidden" name="allIDCheck" value="" id="allIDCheck"/>
+		<input type="hidden" name="fangyuanEntity.fyXqName" value="" id="fyXqName"/>
+		<div id="container">
+			<div class="ui_content">
+				<div class="ui_text_indent">
+					<div id="box_border">
+						<div id="box_top">搜索</div>
+						<div id="box_center">
+							<select name="fangyuanEntity.fyXqCode" id="fyXq" class="ui_select01" onchange="getFyDhListByFyXqCode();">
+                                <option value=""
+                                >--请选择--</option>
+                                <option value="1" >城市</option>
+                                <option value="2" >职位</option>
+                            </select>
+							<input type="text" id="fyZldz" name="fangyuanEntity.fyZldz" class="ui_input_txt02" />
+							<input type="button" value="查询" class="ui_input_btn01" onclick="searchall();" />
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="ui_content">
+				<div class="ui_tb">
+					<table class="table" cellspacing="0" cellpadding="0" width="100%" align="center" border="0">
+						<tr>
+							<th>姓名</th>
+							<th>性别</th>
+							<th>年龄</th>
+							<th>期望薪资</th>
+							<th>学历</th>
+							<th>工作经验</th>
+							<th>学校</th>
+							<th>专业</th>
+							<th>职位</th>
+							<th>城市</th>
+						</tr>
+                        {% for p in page.object_list %}
+                            <tr>
+								<td>{{ p.name }}</td>
+								<td>{{ p.sex }}</td>
+								<td>{{ p.age }}</td>
+								<td>{{ p.salary }}</td>
+								<td>{{ p.education }}</td>
+								<td>{{ p.work_experience }}</td>
+								<td>{{ p.school }}</td>
+								<td>{{ p.specialty }}</td>
+								<td>{{ p.expect_job }}</td>
+								<td>{{ p.jobsite }}</td>
+							</tr>
+                        {% endfor %}
+					</table>
+				</div>
+				<div class="ui_tb_h30">
+					<div class="ui_flt" style="height: 30px; line-height: 30px;">
+						共有
+						<span class="ui_txt_bold04">{{ page.paginator.count }}</span>
+						条记录，当前第
+						<span class="ui_txt_bold04">{{ page.number }}
+						/{{ page.paginator.num_pages }}</span>
+						页
+					</div>
+					<div class="ui_frt">
+						<!--    如果是第一页，则只显示下一页、尾页 -->
+						
+							<input type="button" value="首页" class="ui_input_btn01" onclick="firstpage()" name="first"/>
+						{% if page.has_previous %}
+                            <input type="button" value="上一页" class="ui_input_btn01" onclick="prev({{ page.previous_page_number }})" name="previous" />
+						{% endif %}
+                            {% if page.has_next %}
+                                <input type="button" value="下一页" class="ui_input_btn01" name="next"
+                                    onclick="nextpage({{ page.next_page_number }})" />
+                            {% endif %}
+							<input type="button" value="尾页" class="ui_input_btn01" name="last"
+								onclick="lastpage({{ page.paginator.num_pages }});" />
+							<!--     如果是最后一页，则只显示首页、上一页 -->
+						
+						转到第<input type="text" id="jumpNumTxt" class="ui_input_txt01" />页
+							 <input type="button" class="ui_input_btn01" value="跳转" onclick="jumpInputPage();" />
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+<script>
+    function firstpage() {
+        location.href = "{% url 'baiapp:menu' %}?number=1"
+    }
+    function prev(previous) {
+        location.href = "{% url 'baiapp:menu' %}?number="+previous
+    }
+
+    function nextpage(next) {
+        location.href = "{% url 'baiapp:menu' %}?number="+next
+    }
+    function lastpage(last) {
+        location.href = "{% url 'baiapp:menu' %}?number="+last
+    }
+    function jumpInputPage() {
+        jumppage=document.getElementById('jumpNumTxt').value
+        location.href = "{% url 'baiapp:menu' %}?number="+jumppage
+    }
+    function searchall() {
+        searchtext=document.getElementById('fyZldz').value
+        cj=jQuery('#fyXq option:selected').text()
+        alert(cj)
+        {#jobs=document.getElementById('jobs').value#}
+        location.href = "{% url 'baiapp:mainc' %}?searchtext="+searchtext+"&cj="+cj
+    }
+</script>
+</body>
+</html>
