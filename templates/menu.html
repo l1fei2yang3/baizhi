@@ -120,7 +120,6 @@
     function searchall() {
         searchtext=document.getElementById('fyZldz').value
         cj=jQuery('#fyXq option:selected').text()
-        alert(cj)
         {#jobs=document.getElementById('jobs').value#}
         location.href = "{% url 'baiapp:mainc' %}?searchtext="+searchtext+"&cj="+cj
     }
