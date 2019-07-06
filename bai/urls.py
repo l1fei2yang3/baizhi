@@ -13,4 +13,5 @@ urlpatterns = [
     path('register/',views.register,name='register'),
     path('registerlogic/',views.registerlogic,name='registerlogic'),
     path('checkName/',views.checkName,name='checkName'),
+    path('huakuai/',views.huakuai,name='huakuai'),
 ]
