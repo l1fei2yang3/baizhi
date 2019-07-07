@@ -9,14 +9,15 @@
 <script type="text/javascript" src="{% static 'scripts/authority/commonAll.js' %}"></script>
 <script type="text/javascript" src="{% static 'scripts/fancybox/jquery.fancybox-1.3.4.js' %}"></script>
 <script type="text/javascript" src="{% static 'scripts/fancybox/jquery.fancybox-1.3.4.pack.js' %}"></script>
-<title>百智招聘</title>
+<script src="{% static 'scripts/echarts.min.js' %}"></script>
+    <title>百智招聘</title>
 <script type="text/javascript">
 </script>
 <style>
 </style>
 </head>
 <body>
-	<form id="submitForm" name="submitForm" action="{% url 'baiapp:menu' %}" method="get">
+	<form id="submitForm" name="submitForm" action="{% url 'baiapp:mainc' %}" method="get">
 		<input type="hidden" name="allIDCheck" value="" id="allIDCheck"/>
 		<input type="hidden" name="fangyuanEntity.fyXqName" value="" id="fyXqName"/>
 		<div id="container">
@@ -68,6 +69,70 @@
                         {% endfor %}
 					</table>
 				</div>
+                 <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="width: 600px;height:400px;"></div>
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('main'));
+
+        // 指定图表的配置项和数据
+        var option = {
+            title: {
+                text: '人才的数量对比'
+            },
+            tooltip: {},
+            legend: {
+                data:['各地人才的数量对比']
+            },
+            xAxis: {
+                data: ["北京","上海","广州","深圳"]
+            },
+            yAxis: {},
+            series: [{
+                name: '各地人才的数量对比',
+                type: 'bar',
+                data: [{{ beijing }}, {{ shanghai }}, {{ guangzhou }}, {{ shenzhen }}]
+            }]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+    </script>
+                      <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main1" style="width: 600px;height:400px;"></div>
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('main1'));
+
+        // 指定图表的配置项和数据
+        var option = {
+            tooltip: {},
+            series : [
+                {
+            name: '各地人才的数量对比',
+            type: 'pie',
+            radius: '55%',
+            data:[
+                {value:{{ beijing }}, name:'北京'},
+                {value:{{ shanghai }}, name:'上海'},
+                {value:{{ guangzhou }}, name:'广州'},
+                {value:{{ shenzhen }}, name:'深圳'},
+            ],
+
+            roseType: '',
+            itemStyle: {
+                normal: {
+                    shadowBlur: 200,
+                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+            }
+        }
+    ]
+};
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+    </script>
 				<div class="ui_tb_h30">
 					<div class="ui_flt" style="height: 30px; line-height: 30px;">
 						共有
@@ -77,9 +142,11 @@
 						/{{ page.paginator.num_pages }}</span>
 						页
 					</div>
+
 					<div class="ui_frt">
 						<!--    如果是第一页，则只显示下一页、尾页 -->
-						
+                            <a id="a1" style="display: none">{{ city }}</a>
+                            <a id="a2" style="display: none">{{ job }}</a>
 							<input type="button" value="首页" class="ui_input_btn01" onclick="firstpage()" name="first"/>
 						{% if page.has_previous %}
                             <input type="button" value="上一页" class="ui_input_btn01" onclick="prev({{ page.previous_page_number }})" name="previous" />
@@ -95,27 +162,33 @@
 						转到第<input type="text" id="jumpNumTxt" class="ui_input_txt01" />页
 							 <input type="button" class="ui_input_btn01" value="跳转" onclick="jumpInputPage();" />
 					</div>
+
 				</div>
 			</div>
 		</div>
 	</form>
 <script>
+
+
     function firstpage() {
-        location.href = "{% url 'baiapp:menu' %}?number=1"
+        location.href = "{% url 'baiapp:mainc' %}?number=1"
     }
     function prev(previous) {
-        location.href = "{% url 'baiapp:menu' %}?number="+previous
+        location.href = "{% url 'baiapp:mainc' %}?number="+previous
     }
 
     function nextpage(next) {
-        location.href = "{% url 'baiapp:menu' %}?number="+next
+        city=document.getElementById('a1').text
+        job=document.getElementById('a2').text
+        location.href = "{% url 'baiapp:mainc' %}?number="+next+"&city="+city+"&job="+job
+
     }
     function lastpage(last) {
-        location.href = "{% url 'baiapp:menu' %}?number="+last
+        location.href = "{% url 'baiapp:mainc' %}?number="+last
     }
     function jumpInputPage() {
         jumppage=document.getElementById('jumpNumTxt').value
-        location.href = "{% url 'baiapp:menu' %}?number="+jumppage
+        location.href = "{% url 'baiapp:mainc' %}?number="+jumppage
     }
     function searchall() {
         searchtext=document.getElementById('fyZldz').value
@@ -123,6 +196,7 @@
         {#jobs=document.getElementById('jobs').value#}
         location.href = "{% url 'baiapp:mainc' %}?searchtext="+searchtext+"&cj="+cj
     }
+
 </script>
 </body>
 </html>

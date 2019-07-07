@@ -73,13 +73,6 @@ class AuthUserUserPermissions(models.Model):
         db_table = 'auth_user_user_permissions'
         unique_together = (('user', 'permission'),)
 
-class Seal_IP(models.Model):
-    ip=models.CharField(max_length=30,default=None,null=True)
-    status=models.CharField(max_length=30,default=None,null=True)
-
-    class Meta:
-        db_table='t_seal_ip'
-
 class BaiDaynumber(models.Model):
     day = models.DateField()
     count = models.IntegerField()

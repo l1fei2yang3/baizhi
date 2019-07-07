@@ -13,10 +13,11 @@ from aliyunsdkcore.profile import region_provider
 from lxml import etree
 
 from bai import checkIP
-from bai.models import TUser, TPersonalInformation
-
+import redis
 from .models import *
 from django.utils import timezone
+
+r = redis.Redis(host='192.168.17.128', port=7000)
 
 lxcsdn = ["https://blog.csdn.net/weixin_43582101/column/info/33034",
           "https://blog.csdn.net/weixin_43582101/article/details/86563910",
@@ -26,7 +27,7 @@ lxcsdn = ["https://blog.csdn.net/weixin_43582101/column/info/33034",
 ips = [None]      #存储客户端最后一次访问的ip地址   空列表也是列表,None类型只有None一个值
 ## ips=[None] 为了防止 list index out of range
 last = 0           #存储客服端最后一次访问时间
-def isCraw(func):
+def isCraw(fun):
     def wrapper(*args,**kwargs):
         global ips,last       #声明全局变量
                #request.META 是一个字典,包含了所有本次HTTP请求的Header信息
@@ -43,15 +44,15 @@ def isCraw(func):
 # 那么web服务器（Nginx,Apache等）就会把client的IP设为IPremote_addr；
 # 如果存在代理转发HTTP请求,web服务器会把最后一次代理服务器的IP设置为remote_addr
             now = time.time()
-
-            if ip==ips[0] and now-last<2:            #为了防止误伤
-
+            if r.get(ip):
+                return HttpResponse("你对发生的事感到好奇吗?如果你仔细读这句话，你就会知道发生了什么事。所以页面没有找到，但是你没有找到它! " )
+            elif ip==ips[0] and now-last<2:            #为了防止误伤
+                r.set(ip,'1',ex=3600 * 3)
                 return HttpResponse("你对发生的事感到好奇吗?如果你仔细读这句话，你就会知道发生了什么事。所以页面没有找到，但是你没有找到它! " )
             last = now
             ips.pop()
             ips.append(ip)
-
-            return func(*args,**kwargs)
+            return fun(*args,**kwargs)
     return wrapper
 
 
@@ -119,14 +120,13 @@ def change_info(func):  # 修改网站访问量和访问ip等信息
             temp.day = date
             temp.count = 1
         temp.save()
-
         return func(request,*args, **kwargs)
     return inner
 # @change_info
 # def zhuang(i):
 #     return i
-@change_info
-@isCraw
+# @change_info
+# @isCraw
 def index(request):
     status = request.session.get("login")  # 获取登录状态
      #当网站被访问时，更新网站访问次数
@@ -134,21 +134,29 @@ def index(request):
         return render(request,'main.html')
     return redirect('baiapp:login')
 
-@change_info
-@isCraw
+# @change_info
+# @isCraw
 def introduce(request):
     return render(request,'introduce.html')
 
-@change_info
-@isCraw
+# @change_info
+# @isCraw
 def mainc(request):
     # try:
+        city = request.GET.get('city')  # 城市编码
+        job = request.GET.get('job')  # 职业名称
+        print(148,city,job)
         cj=request.GET.get('cj')#获取前端传来的下拉框值
         searchtext=request.GET.get('searchtext')#获取前端传来的搜索词
         number = request.GET.get("number")  # 获取前端传来的页码
         if not number:  # 判断如果页面为空的话
             number = 1  # 页码的值默认为1
-        if cj=='城市':
+        if city=='None' and job=='None':
+            # select = TPersonalInformation.objects.filter(jobsite__icontains=city, expect_job__icontains=job)
+            select = TPersonalInformation.objects.all()
+        elif city:
+            select = TPersonalInformation.objects.filter(jobsite__icontains=city, expect_job__icontains=job)
+        elif cj=='城市':
             select = TPersonalInformation.objects.filter(jobsite__icontains=searchtext)
         elif cj=='职位':
             select = TPersonalInformation.objects.filter(expect_job__icontains=searchtext)
@@ -170,31 +178,37 @@ def mainc(request):
             elif searchtext in '软件测试':
                 select=TPersonalInformation.objects.filter(expect_job__icontains=searchtext)
         elif not searchtext:
-            select = TPersonalInformation.objects.all()
+            select = TPersonalInformation.objects.all().order_by("id")
+
         else:
             return HttpResponse('您输入的查询不到')
+        print(select)
+        beijing=TPersonalInformation.objects.filter(jobsite='北京').count()
+        shanghai=TPersonalInformation.objects.filter(jobsite='上海').count()
+        guangzhou=TPersonalInformation.objects.filter(jobsite='广州').count()
+        shenzhen=TPersonalInformation.objects.filter(jobsite='深圳').count()
         pagtor = Paginator(select, per_page=10)  # 将查询到的数据进行每一页30条数据划分
-        page=pagtor.page(number)
-        return render(request,'menu.html',{'select':select,'page':page,'number':number,})
+        page = pagtor.page(number)
+        print(178,page,number)
+        return render(request,'menu.html',{'select':select,'page':page,'number':number,'city':city,'job':job,'beijing':beijing,'guangzhou':guangzhou,'shanghai':shanghai,'shenzhen':shenzhen})
     # except:
     #     return HttpResponse('页码不正确')
-@change_info
-@isCraw
-def menu(request):
-    try:
-        city=request.GET.get('city')#城市编码
-        job=request.GET.get('job')#职业名称
-        print(city,job)
-        number = request.GET.get("number")  # 获取前端传来的页码
-        if not number:  # 判断如果页面为空的话
-            number = 1  # 页码的值默认为1
-        select = TPersonalInformation.objects.filter(jobsite=city,expect_job=job)
-        pagtor = Paginator(select, per_page=10)  # 将查询到的数据进行每一页30条数据划分
-        page=pagtor.page(number)
-
-        return render(request,'menu.html',{'select':select,'page':page,'number':number,})
-    except:
-        return HttpResponse('页码不正确')
+# @change_info
+# @isCraw
+# def menu(request):
+#     # try:
+#         city=request.GET.get('city')#城市编码
+#         job=request.GET.get('job')#职业名称
+#         print(city,job)
+#         number = request.GET.get("number")  # 获取前端传来的页码
+#         if not number:  # 判断如果页面为空的话
+#             number = 1  # 页码的值默认为1
+#         select = TPersonalInformation.objects.filter(jobsite__icontains=city,expect_job__icontains=job)
+#         pagtor = Paginator(select, per_page=30)  # 将查询到的数据进行每一页30条数据划分
+#         page=pagtor.page(number)
+#         return render(request,'menu.html',{'select':select,'page':page,'number':number,})
+#     # except:
+#     #     return HttpResponse('页码不正确')
 def login(request):
     return render(request,'login.html')
 def loginlogic(request):
@@ -271,3 +285,5 @@ def huakuai(req):    #登录滑块验证
     # print(code)
     req.session['code'] = code
     return HttpResponse('%s'%code)
+def tst(request):
+    return render(request,'test.html')
